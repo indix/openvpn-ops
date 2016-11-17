@@ -1,0 +1,8 @@
+---
+
+galaxy_info:
+  author: "Naween"
+  min_ansible_version: 1.9
+  platforms:
+   - name: Ubuntu
+dependencies: []
