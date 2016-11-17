@@ -1,0 +1,14 @@
+---
+- name: Restart openvpn server 
+  sudo: yes
+  service:
+    name: openvpn
+    state: restarted
+    enabled: yes
+
+- name: Restart dnsmasq service 
+  sudo: yes
+  service:
+    name: dnsmasq
+    state: restarted
+    enabled: yes

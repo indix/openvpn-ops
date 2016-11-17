@@ -1,0 +1,94 @@
+---
+
+- name: Copy easy rsa files to {{openvpn_easyrsa_dir}}
+  shell: cp -R /usr/share/easy-rsa/ {{openvpn_dir}}
+# Update this to use copy command, could look at using ansible 2.0 copy which allows remote source
+
+- name: Install vars
+  template:
+    src: ../templates/vars.j2
+    dest: "{{openvpn_easyrsa_dir}}/vars"
+    mode: 0700
+
+# - name: Copy openssl.cnf file to {{openvpn_easyrsa_dir}}
+#   file: "path={{openvpn_easyrsa_dir}}/{{item}} state=absent"
+#   with_items:
+#     - openssl-1.0.0.cnf
+#     - pkitool
+#   when: not file_check.stat.exists
+
+- name: Copy openssl.cnf file to {{openvpn_easyrsa_dir}}
+  copy:
+    src: "../files/{{item}}"
+    dest: "{{openvpn_easyrsa_dir}}/{{item}}"
+    mode: "0755"
+  with_items:
+    - openssl-1.0.0.cnf
+    - pkitool
+
+## Building master certificate and private key
+- name: Cleaning precreated keys directory
+  shell: . ./vars && ./clean-all chdir={{openvpn_easyrsa_dir}}
+
+- name: Generating certificate authority public and private key
+  shell: . ./vars && ./pkitool --initca chdir={{openvpn_easyrsa_dir}}
+
+## Note that server certificate is signed by CA's private key
+- name: Generating public and private key for openvpn server
+  shell: . ./vars && ./pkitool --server {{openvpn_server_key_name}}  chdir={{openvpn_easyrsa_dir}}
+
+## Securely passing keys over an insecure channel. Generating Diffie Hellman params
+- name: Generating Diffie Hellman parameters
+  shell: . ./vars && ./build-dh chdir={{openvpn_easyrsa_dir}}
+
+## At this point we have following
+# ca.crt - certificate of the certificate authority
+# ca.key - private key of the CA
+# {{openvpn_server_key_name}}.crt - certificate of the openvpn server
+# {{openvpn_server_key_name}}.key - certificate of the openvpn server
+# dh2048.pem - Diffie Hellman parameters file
+
+- name: Copy all files but ca.crt to /etc/openvpn directory
+  shell: "cp ca.crt {{openvpn_server_key_name}}.crt {{openvpn_server_key_name}}.key dh2048.pem {{openvpn_dir}} chdir={{openvpn_easyrsa_dir}}/keys/"
+
+- name: Copy dummy crl.pem file to {{openvpn_dir}}. This is to overcome known openvpn bug. Empty CRL file causes crash
+  copy:
+    src: "../files/crl.pem"
+    dest: "{{openvpn_dir}}/crl.pem"
+    mode: "0755"
+
+- name: Printing netstat output
+  shell: netstat -anup
+
+- name: Dnsmasq configuraton file
+  template:
+    src: ../templates/dnsmasq.conf.j2
+    dest: /etc/dnsmasq.conf
+    mode: 0755
+  notify: Restart dnsmasq service
+
+- name: Printing netstat output
+  shell: netstat -anup
+
+- name: Enabling IP forwarding
+  shell: echo "1" > /proc/sys/net/ipv4/ip_forward
+
+- name: Copying sysctl config for making ip forwarding persistent
+  template:
+    src: ../templates/sysctl.conf.j2
+    dest: /etc/sysctl.conf
+
+## Ip table rules
+- name: Execute iptable commands
+  command: "{{item}}"
+  with_items:
+    - "iptables -A FORWARD -m state --state RELATED,ESTABLISHED -j ACCEPT"
+    - "iptables -A FORWARD -s 10.8.0.0/24 -j ACCEPT"
+    - "iptables -A FORWARD -j REJECT"
+    - "iptables -t nat -A POSTROUTING -s 10.8.0.0/24 -o eth0 -j MASQUERADE"
+  notify: Restart dnsmasq service
+
+- name: Making ip table rules persistent across machine reboot
+  template:
+    src: ../templates/rc.local.j2
+    dest: /etc/rc.local

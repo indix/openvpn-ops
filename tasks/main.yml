@@ -1,0 +1,32 @@
+---
+
+- name: Set postfix option hostname
+  debconf: name=postifx question="postfix/mailname" value="{{ansible_fqdn}}" vtype="string"
+
+- name: Set Postfix option type as internet site
+  debconf: name=postfix question="postfix/main_mailer_type" value="'Internet Site'" vtype="string"
+
+- name: Install openvpn, dnsmasq, easy-rsa and mail
+  apt: pkg={{item}} state=installed update_cache=yes
+  with_items:
+    - ufw
+    - openvpn
+    - easy-rsa
+    - dnsmasq
+    - postfix
+    - mailutils
+
+- name: Check if vpn server is setup already(validate if dirs exist)
+  stat: "path={{openvpn_easyrsa_dir}}"
+  register: file_check
+
+- name: Include openvpn new server task
+  include: openvpn_base.yml
+  when: not file_check.stat.exists
+
+- name: Openvpn servers configuraton file
+  template:
+    src: ../templates/server.conf.j2
+    dest: "{{openvpn_dir}}/{{openvpn_server_key_name}}.conf"
+    mode: 0755
+  notify: Restart openvpn server
