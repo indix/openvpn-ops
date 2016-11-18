@@ -1,4 +1,4 @@
-# test for openvpn
+# test for openvpn server
 ---
 - hosts: localhost
   connection: local
