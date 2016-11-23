@@ -19,3 +19,4 @@ openvpn_dns_zone: dummy
 openvpn_reroute_all_traffic: true
 openvpn_cidr_host_part: 10.0.0.0
 openvpn_netmask_part: 255.255.0.0
+openvpn_private_dns_list: []

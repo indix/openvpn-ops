@@ -307,4 +307,9 @@ push "route {{item.host_part}} {{item.netmask_part}}"
 {% endfor %}
 {% endif %}
 push "dhcp-option DOMAIN {{ openvpn_dns_zone }}"
+{% if openvpn_private_dns_list is defined %}
+{% for item in openvpn_private_dns_list %}
+push "dhcp-option DNS {{item}}"
+{% endfor %}
+{% endif %}
 push "dhcp-option DNS {{ openvpn_dnsmasq_local_ip }}"
