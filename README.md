@@ -1,6 +1,6 @@
 ## README
 
-[![BuildStatus](https://travis-ci.org/ind9-ops/openvpn-ops.svg?branch=master)](https://travis-ci.org/ind9-ops/openvpn-ops)
+[![BuildStatus](https://travis-ci.org/indix/openvpn-ops.svg?branch=master)](https://travis-ci.org/indix/openvpn-ops)
 
 We are using pkitool to generate PKI infrastructure. There are some quirks as a result we have both openssl cnf
 and pkitool added as files.
