@@ -6,4 +6,5 @@ galaxy_info:
   min_ansible_version: 1.9
   platforms:
    - name: Ubuntu
-dependencies: []
+dependencies:
+  - role: ansible-hostname
