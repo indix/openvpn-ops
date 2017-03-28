@@ -1,11 +1,5 @@
 ---
 
-- name: Set postfix option hostname
-  debconf: name=postifx question="postfix/mailname" value="{{ansible_fqdn}}" vtype="string"
-
-- name: Set Postfix option type as internet site
-  debconf: name=postfix question="postfix/main_mailer_type" value="'Internet Site'" vtype="string"
-
 - name: Install openvpn, dnsmasq, easy-rsa and mail
   apt: pkg={{item}} state=installed update_cache=yes
   with_items:
