@@ -20,6 +20,7 @@ install:
   - if [ "$ANSIBLE_VERSION" = "latest" ]; then pip install --no-binary ansible ansible; else pip install --no-binary ansible ansible==$ANSIBLE_VERSION; fi
   - echo -e '[defaults]\nroles_path = ../' > ansible.cfg
   - ansible-galaxy install git+https://github.com/indix/ansible-hostname.git
+  - ansible-galaxy install git+https://github.com/indix/ansible-monit.git
 
 script:
   # Check the role/playbook's syntax.

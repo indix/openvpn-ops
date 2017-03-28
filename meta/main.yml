@@ -8,3 +8,14 @@ galaxy_info:
    - name: Ubuntu
 dependencies:
   - role: ansible-hostname
+    sudo: yes
+    
+  - role: ansible-monit
+    sudo: yes
+    monit_services:
+      - name: openvpn
+        type: process
+        start: "/etc/init.d/openvpn start"
+        stop: "/etc/init.d/openvpn stop"
+        user: 'root'
+        group: 'root'
